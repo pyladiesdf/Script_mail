@@ -1,33 +1,53 @@
-// This constant is written in column C for rows for which an email
-// has been sent successfully.
-var EMAIL_SENT = 'EMAIL_SENT';
 
-/**
- * Sends non-duplicate emails with data from the current spreadsheet.
- */
-function sendEmails2() {
+/*
+Envia emails com anexo do Google Drive para endereços armazenados na planilha atual
+*/
+
+var EMAIL_ENVIADO = 'EMAIL_ENVIADO'; // Essa constante será gravada na quarta coluna da planilha para indicar que um email já foi enviado para esse endereço
+
+var startRow = 2; // Primeira linha dos dados na planilha
+var numRows = 66; // Número de linhas a serem processadas
+var startColumn = 1;// Primeira coluna dos dados na planilha
+var numColumns = 4;// Número de colunas a serem processadas;
+
+
+function sendEmails() {
   var sheet = SpreadsheetApp.getActiveSheet();
-  var startRow = 2; // First row of data to process
-  var numRows = 2; // Number of rows to process
-  // Fetch the range of cells A2:B3
-  var dataRange = sheet.getRange(startRow, 1, numRows, 3);
-  // Fetch values for each row in the Range.
+  // Pega as células que serão utilizadas da planilha
+  var dataRange = sheet.getRange(startRow, startColumn, numRows, numColumns);
+  // Pega os valores de todos as colunas
   var data = dataRange.getValues();
   for (var i = 0; i < data.length; ++i) {
     var row = data[i];
-    var emailAddress = row[0]; // First column
-    var message = row[1]; // Second column
-    var emailSent = row[2]; // Third column
-    if (emailSent != EMAIL_SENT) { // Prevents sending duplicates
-      var subject = 'Sending emails from a Spreadsheet w/ Attachment';
-      // Send an email with a file from Google Drive attached as a PDF.
-      var file = DriveApp.getFileById('id'); //id do arquivo
+
+    var messageName = row[0]; // Primeira coluna
+    var emailAddress = row[1]; // Segunda coluna
+    var attachmentName = row[2] // Terceira coluna
+    var emailSent = row[3]; // Quarta coluna
+
+    /* 
+    Dados do anexo
+    */
+    
+    // Carregar id do anexo na variável fileId de acordo com o nome do arquivo em attachmentName
+    
+    /* 
+    Dados do email
+    */
+    var subject = 'Django Girls Brasília 2019 - Certificado'; // Assunto do emails
+    var message = 'Olá! Com saudade da gente?\n' + messageName + '\nÉ com muito alegria que lhe enviamos o seu certificado de maravilhosidade.\nTe esperamos no Pós-Django Gilrs nessa quinta dia 29 às 19h na Aceleradora Cotidiano.\nAbraço,\nPyLadies'; // Mensagem do email
+         
+    // Envio do email
+    if (emailSent != EMAIL_ENVIADO) { // Confere para duplicatas
+
+      // Envia um email com um arquivo do Google Drive em um anexo de formato PDF
+      var file = DriveApp.getFileById(fileId); //id do arquivo
       GmailApp.sendEmail(emailAddress, subject, message, {
       attachments: [file.getAs(MimeType.PDF)],
-      name: 'Automatic Emailer Script'
+      name: 'PyLadies DF'
       });
-      sheet.getRange(startRow + i, 3).setValue(EMAIL_SENT);
-      // Make sure the cell is updated right away in case the script is interrupted
+      sheet.getRange(startRow + i, 3).setValue(EMAIL_ENVIADO);
+      // Certifica que a célula atual foi marcada em caso de interupção do script
       SpreadsheetApp.flush();
     }
   }
